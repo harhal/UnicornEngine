@@ -7,34 +7,54 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace UnicornEngine
 {
-    public class Scene
+    public abstract class Scene
     {
         DebugOuput debug;
         public bool DebugMode = false;
-        Sprite menuPanel;
         public Color colorBG = Color.Black;
+        public Action<int> exit;
+        public Effect effect = null;
 
         public Object2D Draggable;
         public Object2D Canvas;
         protected Object2D Effects;
-        //Object2D Menu;
+        protected List<DEvent> dEvents;
 
         public void AddEffect(EffectSprite effect)
         {
             Effects.elements.Add(effect);
         }
 
-        public Scene()
+        public void CleareEffects()
         {
-            menuPanel = new Sprite(null, "MenuPanel", 25, new Vector2(74, 1));
-            menuPanel.elements.Add(new Button(menuPanel, "HelpButton", 5, new Vector2(1, 0.8f), new int[] { 1, 1, 1 }, "Help", delegate { }));
-            menuPanel.elements.Add(new Button(menuPanel, "MenuButton", 5, new Vector2(7, 0.8f), new int[] { 1, 1, 1 }, "Menu", delegate { }));
-            menuPanel.elements.Add(new Button(menuPanel, "SettingButton", 5, new Vector2(13, 0.8f), new int[] { 1, 1, 1 }, "Setting", delegate { }));
-            menuPanel.elements.Add(new Button(menuPanel, "SoundOn", 5, new Vector2(19, 0.8f), new int[] { 1, 1, 1 }, "Sound", delegate { }));
+            Effects.elements.Clear();
+        }
+
+        public void AddEvent(DEvent dEvent)
+        {
+            dEvents.Add(dEvent);
+        }
+
+        public void AddEvent(float lifeTime, Action onFinish)
+        {
+            dEvents.Add(new DEvent(lifeTime, onFinish));
+        }
+
+        public void CleareEvents()
+        {
+            dEvents.Clear();
+        }
+
+        public Scene(Action<int> exit)
+        {
+            this.exit = exit;
             Canvas = new Object2D(null, Vector2.Zero, Vector2.Zero);
             Effects = new Object2D(null, Vector2.Zero, Vector2.Zero);
+            dEvents = new List<DEvent>();
             debug = new DebugOuput();
         }
+
+        public abstract Scene GetReloadedScene();
 
         public virtual void Update()
         {
@@ -42,20 +62,27 @@ namespace UnicornEngine
                 debug.Update();
             if (Draggable != null)
                 Draggable.absolutePos = EngineCore.GetCurrentCursorPos() - Draggable.size / 2;
-            menuPanel.Update();
             Canvas.Update();
             Effects.Update();
-            Effects.elements.RemoveAll(delegate(Object2D a) { return ((EffectSprite)a).died; });
+            Effects.elements.RemoveAll(delegate (Object2D a) { return ((EffectSprite)a).died; });
+            int startCount = dEvents.Count;
+            for (int i = 0; i < startCount; i++)
+                dEvents[i].Update();
+            dEvents.RemoveAll(delegate (DEvent a) { return ((DEvent)a).died; });
         }
 
         public virtual void Draw()
         {
-            EngineCore.graphics.GraphicsDevice.Clear(colorBG);
+            EngineCore.graphics.GraphicsDevice.Clear(Color.Black);
             Rectangle ORR = EngineCore.graphics.GraphicsDevice.ScissorRectangle;
             RasterizerState RS = new RasterizerState();
             RS.ScissorTestEnable = true;
-            EngineCore.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.Default, RS);
+            if (effect != null)
+                EngineCore.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.Default, RS, effect);
+            else
+                EngineCore.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.AnisotropicClamp, DepthStencilState.Default, RS);
             EngineCore.graphics.GraphicsDevice.ScissorRectangle = EngineCore.RenderedRectangle;
+            EngineCore.graphics.GraphicsDevice.Clear(colorBG);
             Canvas.Draw();
             Effects.Draw();
             EngineCore.spriteBatch.End();
@@ -63,7 +90,6 @@ namespace UnicornEngine
             EngineCore.spriteBatch.Begin();
             if (DebugMode)
                 debug.Draw();
-            menuPanel.Draw();
             EngineCore.spriteBatch.End();
         }
     }

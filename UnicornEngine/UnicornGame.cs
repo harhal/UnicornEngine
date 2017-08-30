@@ -1,12 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 
 namespace UnicornEngine
 {
-    public class UnicornGame : Microsoft.Xna.Framework.Game
+    public abstract class UnicornGame : Microsoft.Xna.Framework.Game
     {
-        public Point[] resolutionList;
-        public bool debugMode = false;
+        protected bool debugMode = false;
 
         public UnicornGame()
         {
@@ -20,30 +20,27 @@ namespace UnicornEngine
         }
 
         protected override void LoadContent()
-        {
-            resolutionList = EngineCore.RefreshResolutionList();
-            EngineCore.Initialize(new SpriteBatch(GraphicsDevice), Content);
+        {;
         }
 
         protected override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
             EngineCore.Update(gameTime);
-            if (EngineCore.currentKeyboardState.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.F) && debugMode)
+            if (EngineCore.FullScreen != EngineCore.graphics.IsFullScreen)
             {
-                EngineCore.graphics.ToggleFullScreen();
-                if (EngineCore.graphics.IsFullScreen)
+                if (!EngineCore.graphics.IsFullScreen)
                 {
-                    EngineCore.graphics.PreferredBackBufferWidth = resolutionList[resolutionList.Length - 1].X;
-                    EngineCore.graphics.PreferredBackBufferHeight = resolutionList[resolutionList.Length - 1].Y;
+                    EngineCore.graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+                    EngineCore.graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
                 }
                 else
                 {
                     EngineCore.graphics.PreferredBackBufferWidth = 800;
                     EngineCore.graphics.PreferredBackBufferHeight = 480;
                 }
+                EngineCore.graphics.ToggleFullScreen();
                 EngineCore.graphics.ApplyChanges();
-
             }
         }
     }

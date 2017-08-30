@@ -58,9 +58,19 @@ namespace UnicornEngine
             elements = new List<Object2D>();
         }
 
-        public virtual bool UnderMouse()
+        public bool UnderMouse()
         {
-            return box.Contains(new Vector3(EngineCore.GetCurrentCursorPos(), 0)) == ContainmentType.Contains && active;
+            return UnderMouse(EngineCore.GetCurrentCursorPos());
+        }
+
+        public bool UnderMouseBefore()
+        {
+            return UnderMouse(EngineCore.GetOldCursorPos());
+        }
+
+        protected virtual bool UnderMouse(Vector2 cursorPos)
+        {
+            return box.Contains(new Vector3(cursorPos, 0)) == ContainmentType.Contains && active;
         }
 
         public Object2D ObjUnderMouse()

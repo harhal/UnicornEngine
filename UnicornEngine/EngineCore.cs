@@ -14,6 +14,8 @@ namespace UnicornEngine
         public static SpriteBatch spriteBatch;
         public static GraphicsDeviceManager graphics;
         public static ContentManager content;
+        public static Effect currentEffect;
+        public static bool FullScreen = true;
         public static void Initialize(SpriteBatch spriteBatch, ContentManager content)
         {
             EngineCore.spriteBatch = spriteBatch;
@@ -71,14 +73,38 @@ namespace UnicornEngine
         #endregion
         #endregion
 
+        static public bool helpOn;
 
         #region Аудио ядро
-        public static float soundVolume;
+        public static Sound singleSound;
+        private static bool _mute;
+        public static bool mute
+        {
+            get { return _mute; }
+            set { _mute = value; MediaPlayer.Volume = 0; }
+        }
+        private static float _soundVolume;
+        public static float soundVolume
+        {
+            get { if (!mute) return _soundVolume; else return 0; }
+            set { _soundVolume = value; }
+        }
         private static float _musicVolume;
         public static float musicVolume
         {
             get { return _musicVolume; }
-            set { _musicVolume = value % 100; MediaPlayer.Volume = _musicVolume / 100; }
+            set { _musicVolume = value < 100 ? value > 0 ? value : 0 : 100; MediaPlayer.Volume = _musicVolume / 100; }
+        }
+        public static void PlaySound(Sound sound)
+        {
+            if (singleSound != null)
+                singleSound.Stop();
+            singleSound = sound;
+            singleSound.Play();
+        }
+        public static void StopSound()
+        {
+            singleSound.Stop();
         }
         public static void PlaySound(SoundEffect sound)
         {
@@ -116,66 +142,5 @@ namespace UnicornEngine
             currentKeyboardState = Keyboard.GetState();
         }
         #endregion
-
-        [DllImport("user32.dll")]
-        public static extern bool EnumDisplaySettings(string deviceName, int modeNum, ref DEVMODE devMode);
-
-        const int ENUM_CURRENT_SETTINGS = -1;
-
-        const int ENUM_REGISTRY_SETTINGS = -2;
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct DEVMODE
-        {
-            private const int CCHDEVICENAME = 0x20;
-            private const int CCHFORMNAME = 0x20;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 0x20)]
-            public string dmDeviceName;
-            public short dmSpecVersion;
-            public short dmDriverVersion;
-            public short dmSize;
-            public short dmDriverExtra;
-            public int dmFields;
-            public int dmPositionX;
-            public int dmPositionY;
-            public int dmDisplayOrientation;
-            public int dmDisplayFixedOutput;
-            public short dmColor;
-            public short dmDuplex;
-            public short dmYResolution;
-            public short dmTTOption;
-            public short dmCollate;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 0x20)]
-            public string dmFormName;
-            public short dmLogPixels;
-            public int dmBitsPerPel;
-            public int dmPelsWidth;
-            public int dmPelsHeight;
-            public int dmDisplayFlags;
-            public int dmDisplayFrequency;
-            public int dmICMMethod;
-            public int dmICMIntent;
-            public int dmMediaType;
-            public int dmDitherType;
-            public int dmReserved1;
-            public int dmReserved2;
-            public int dmPanningWidth;
-            public int dmPanningHeight;
-
-        }
-
-        public static Point[] RefreshResolutionList()
-        {
-            System.Collections.Generic.List<Point> res = new System.Collections.Generic.List<Point>();
-            DEVMODE vDevMode = new DEVMODE();
-            int i = 0;
-            while (EnumDisplaySettings(null, i, ref vDevMode))
-            {
-                res.Add(new Point(vDevMode.dmPelsWidth,
-                                  vDevMode.dmPelsHeight));
-                 i+=3;
-            }
-            return res.ToArray();
-        }
     }
 }

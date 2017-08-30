@@ -33,6 +33,18 @@ namespace UnicornEngine
         }
         public float speedAnimation = 1f;
         public bool animationLooped = false;
+        float _rotation = 0;
+        public float rotation
+        {
+            get
+            {
+                return _rotation;
+            }
+            set
+            {
+                _rotation = value % 360;
+            }
+        }
 
         public float _scale;
         public float scale
@@ -63,13 +75,13 @@ namespace UnicornEngine
             Map.GetData<Color>(this.collisionMap);//заполним массив цветов
         }
 
-        public override bool UnderMouse()
+        protected override bool UnderMouse(Vector2 cursorPos)
         {
-            if (base.UnderMouse())
+            if (base.UnderMouse(cursorPos))
             {
                 if (mapSize != Point.Zero)
                 {
-                    Vector2 relativeCursorPos = EngineCore.GetCurrentCursorPos() - absolutePos;
+                    Vector2 relativeCursorPos = cursorPos - absolutePos;
                     Point texturePos = new Point((int)(relativeCursorPos.X * mapSize.X / size.X), 
                                                  (int)(relativeCursorPos.Y * mapSize.Y / size.Y));
                     if (texturePos.X < 0)             texturePos.X = 0;
@@ -90,10 +102,10 @@ namespace UnicornEngine
                 this.texture = EngineCore.content.Load<Texture2D>("Sprites/" + fileName);
         }
 
-        public Sprite(Object2D parent, string texture, int[] animationsLengths, float scale, Vector2 pos)
-            :base(parent, new Vector2(scale, scale), pos)
+        public Sprite(Object2D parent, Texture2D texture, int[] animationsLengths, float scale, Vector2 pos)
+            : base(parent, new Vector2(scale, scale), pos)
         {
-            this.texture = EngineCore.content.Load<Texture2D>("Sprites/" + texture);
+            this.texture = texture;
             if (texture != null)
             {
                 frameSize = new Vector2(this.texture.Width / animationsLengths.Max(), this.texture.Height / animationsLengths.Length);
@@ -104,15 +116,24 @@ namespace UnicornEngine
             base.size.X = scale;
         }
 
-        public Sprite(Object2D parent, string texture, float size, Vector2 pos)
+        public Sprite(Object2D parent, string texture, int[] animationsLengths, float scale, Vector2 pos)
+            :this(parent, EngineCore.content.Load<Texture2D>("Sprites/" + texture), animationsLengths, scale, pos) { }
+
+        public Sprite(Object2D parent, Texture2D texture, float size, Vector2 pos)
             :this(parent, texture, new int[] { 1 }, size, pos) { }
+
+        public Sprite(Object2D parent, string texture, float size, Vector2 pos)
+            : this(parent, texture, new int[] { 1 }, size, pos) { }
 
         public override void Draw()
         {
             frame += speedAnimation * (float)EngineCore.gameTime.ElapsedGameTime.TotalMilliseconds / 200;
             if (texture != null && visible)
             {
-                EngineCore.spriteBatch.Draw(texture, posRect, frameRect, color, 0, Vector2.Zero, SpriteEffects.None, 0);
+                //if (EngineCore.currentEffect == null)
+                    EngineCore.spriteBatch.Draw(texture, posRect, frameRect, color, (float)(Math.PI * rotation / 180.0), Vector2.Zero, SpriteEffects.None, 0);
+                /*else
+                    EngineCore.spriteBatch.Draw(texture, posRect, frameRect, color, (float)(Math.PI * rotation / 180.0), Vector2.Zero, EngineCore.currentEffect, 0);*/
                 base.Draw();
             }
         }

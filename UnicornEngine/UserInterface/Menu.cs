@@ -8,11 +8,13 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace UnicornEngine
 {
-    public class Menu:Sprite
+    public abstract class Menu:Sprite
     {
-        public Menu(string texture, float size) : base(null, texture, size, new Vector2((100 - size) / 2, 5))
+        public Menu(string texture, float size, float y = 5) : base(null, texture, size, new Vector2((100 - size) / 2, y))
         {
         }
+
+        public abstract Menu GetReloadedMenu();
 
         public override void Draw()
         {
